@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,7 +20,7 @@ public class UserController {
     private Integer nextId = 1;
 
     @PostMapping
-    public User createUser(@RequestBody User user) {
+    public User createUser(@Valid @RequestBody User user) {
         log.debug("Received user data: {}", user);
 
         if (user.getName() == null || user.getName().isBlank()) {
@@ -37,7 +38,7 @@ public class UserController {
     }
 
     @PutMapping
-    public User updateUser(@RequestBody User user) {
+    public User updateUser(@Valid @RequestBody User user) {
         log.debug("Received update request for user: {}", user);
 
         Integer id = user.getId();
@@ -53,14 +54,11 @@ public class UserController {
 
         log.debug("Found existing user: {}", existingUser);
 
-
         log.debug("Updating email from '{}' to '{}'", existingUser.getEmail(), user.getEmail());
         existingUser.setEmail(user.getEmail());
 
-
         log.debug("Updating login from '{}' to '{}'", existingUser.getLogin(), user.getLogin());
         existingUser.setLogin(user.getLogin());
-
 
         if (user.getName() != null && !user.getName().isBlank()) {
             log.debug("Updating name from '{}' to '{}'", existingUser.getName(), user.getName());
@@ -70,10 +68,8 @@ public class UserController {
             existingUser.setName(existingUser.getLogin());
         }
 
-
         log.debug("Updating birthday from '{}' to '{}'", existingUser.getBirthday(), user.getBirthday());
         existingUser.setBirthday(user.getBirthday());
-
 
         log.info("User updated successfully with id: {}", existingUser.getId());
         log.debug("Updated user: {}", existingUser);
