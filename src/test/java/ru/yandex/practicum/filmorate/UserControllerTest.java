@@ -114,4 +114,36 @@ class UserControllerTest {
         assertNotNull(users);
         assertTrue(users.isEmpty());
     }
+
+    @Test
+    void updateUser_WithNullName_ShouldSetLoginAsName() {
+        User created = userController.createUser(validUser);
+
+        User updateData = new User();
+        updateData.setId(created.getId());
+        updateData.setEmail("updated@example.com");
+        updateData.setLogin("updateduser");
+        updateData.setName(null);  // ← ключевой случай
+        updateData.setBirthday(LocalDate.of(1995, Month.JANUARY, 1));
+
+        User updated = userController.updateUser(updateData);
+
+        assertEquals("updateduser", updated.getName());
+    }
+
+    @Test
+    void updateUser_WithBlankName_ShouldSetLoginAsName() {
+        User created = userController.createUser(validUser);
+
+        User updateData = new User();
+        updateData.setId(created.getId());
+        updateData.setEmail("updated@example.com");
+        updateData.setLogin("updateduser");
+        updateData.setName("   ");
+        updateData.setBirthday(LocalDate.of(1995, Month.JANUARY, 1));
+
+        User updated = userController.updateUser(updateData);
+
+        assertEquals("updateduser", updated.getName());
+    }
 }

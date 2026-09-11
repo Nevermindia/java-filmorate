@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestBody;
+import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.ArrayList;
@@ -23,10 +24,7 @@ public class UserController {
     public User createUser(@Valid @RequestBody User user) {
         log.debug("Received user data: {}", user);
 
-        if (user.getName() == null || user.getName().isBlank()) {
-            log.debug("Name is empty, using login as name: {}", user.getLogin());
-            user.setName(user.getLogin());
-        }
+        resolveName(user);
 
         user.setId(nextId++);
         users.add(user);
@@ -49,10 +47,12 @@ public class UserController {
                 .findFirst()
                 .orElseThrow(() -> {
                     log.error("User not found with id: {}", id);
-                    return new RuntimeException("User not found with id: " + id);
+                    return new NotFoundException("User not found with id: " + id);
                 });
 
         log.debug("Found existing user: {}", existingUser);
+
+        resolveName(user);
 
         log.debug("Updating email from '{}' to '{}'", existingUser.getEmail(), user.getEmail());
         existingUser.setEmail(user.getEmail());
@@ -60,13 +60,8 @@ public class UserController {
         log.debug("Updating login from '{}' to '{}'", existingUser.getLogin(), user.getLogin());
         existingUser.setLogin(user.getLogin());
 
-        if (user.getName() != null && !user.getName().isBlank()) {
-            log.debug("Updating name from '{}' to '{}'", existingUser.getName(), user.getName());
-            existingUser.setName(user.getName());
-        } else if (user.getName() != null) {
-            log.debug("Name is empty, using login: {}", existingUser.getLogin());
-            existingUser.setName(existingUser.getLogin());
-        }
+        log.debug("Updating name from '{}' to '{}'", existingUser.getName(), user.getName());
+        existingUser.setName(user.getName());
 
         log.debug("Updating birthday from '{}' to '{}'", existingUser.getBirthday(), user.getBirthday());
         existingUser.setBirthday(user.getBirthday());
@@ -82,5 +77,12 @@ public class UserController {
         log.info("Returning all users, count: {}", users.size());
         log.debug("Users list: {}", users);
         return users;
+    }
+
+    private void resolveName(User user) {
+        if (user.getName() == null || user.getName().isBlank()) {
+            log.debug("Name is empty, using login as name: {}", user.getLogin());
+            user.setName(user.getLogin());
+        }
     }
 }

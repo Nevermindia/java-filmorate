@@ -8,9 +8,8 @@ import ru.yandex.practicum.filmorate.model.Film;
 
 import java.time.LocalDate;
 import java.time.Month;
-import java.util.ArrayList;
+import java.util.List;
 
-import static java.util.Calendar.DECEMBER;
 import static org.junit.jupiter.api.Assertions.*;
 
 class FilmControllerTest {
@@ -47,8 +46,8 @@ class FilmControllerTest {
     }
 
     @Test
-    void createFilm_WithReleaseDateBefore1895_ShouldThrowValidationException() {
-        validFilm.setReleaseDate(LocalDate.of(1895, DECEMBER, 27));
+    void createFilm_WithReleaseDateLastForbidden_ShouldThrowValidationException() {
+        validFilm.setReleaseDate(LocalDate.of(1895, Month.DECEMBER, 27));
 
         ValidationException exception = assertThrows(ValidationException.class,
                 () -> filmController.createFilm(validFilm));
@@ -57,7 +56,7 @@ class FilmControllerTest {
     }
 
     @Test
-    void createFilm_WithReleaseDate1895_ShouldCreateFilm() {
+    void createFilm_WithReleaseDateFirstAllowed_ShouldCreateFilm() {
         validFilm.setReleaseDate(LocalDate.of(1895, Month.DECEMBER, 28));
 
         Film created = filmController.createFilm(validFilm);
@@ -91,7 +90,40 @@ class FilmControllerTest {
         RuntimeException exception = assertThrows(RuntimeException.class,
                 () -> filmController.updateFilm(updateData));
 
-        assertEquals("Film not found with id: 999", exception.getMessage());
+        assertEquals("Фильм не найден с id: 999", exception.getMessage());
+    }
+
+    @Test
+    void updateFilm_WithReleaseDateLastForbidden_ShouldThrowValidationException() {
+        Film created = filmController.createFilm(validFilm);
+
+        Film updateData = new Film();
+        updateData.setId(created.getId());
+        updateData.setName("Updated Film");
+        updateData.setDescription("Updated description");
+        updateData.setReleaseDate(LocalDate.of(1895, Month.DECEMBER, 27));
+        updateData.setDuration(150);
+
+        ValidationException exception = assertThrows(ValidationException.class,
+                () -> filmController.updateFilm(updateData));
+
+        assertEquals("Дата релиза — не раньше 28 декабря 1895 года", exception.getMessage());
+    }
+
+    @Test
+    void updateFilm_WithReleaseDateFirstAllowed_ShouldUpdateFilm() {
+        Film created = filmController.createFilm(validFilm);
+
+        Film updateData = new Film();
+        updateData.setId(created.getId());
+        updateData.setName("Updated Film");
+        updateData.setDescription("Updated description");
+        updateData.setReleaseDate(LocalDate.of(1895, Month.DECEMBER, 28));
+        updateData.setDuration(150);
+
+        Film updated = filmController.updateFilm(updateData);
+
+        assertEquals(LocalDate.of(1895, Month.DECEMBER, 28), updated.getReleaseDate());
     }
 
     @Test
@@ -105,14 +137,14 @@ class FilmControllerTest {
         secondFilm.setDuration(90);
         filmController.createFilm(secondFilm);
 
-        ArrayList<Film> films = filmController.getFilms();
+        List<Film> films = filmController.getFilms();
 
         assertEquals(2, films.size());
     }
 
     @Test
     void getFilms_WhenNoFilms_ShouldReturnEmptyList() {
-        ArrayList<Film> films = filmController.getFilms();
+        List<Film> films = filmController.getFilms();
 
         assertNotNull(films);
         assertTrue(films.isEmpty());

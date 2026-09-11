@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate;
 
+import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import org.junit.jupiter.api.BeforeEach;
@@ -7,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -28,35 +30,79 @@ class UserValidationTest {
     @Test
     void validate_WithEmptyEmail_ShouldHaveViolation() {
         validUser.setEmail("");
-        assertFalse(validator.validate(validUser).isEmpty());
+
+        Set<ConstraintViolation<User>> violations = validator.validate(validUser);
+
+        assertEquals(1, violations.size());
+        ConstraintViolation<User> violation = violations.iterator().next();
+        assertEquals("email", violation.getPropertyPath().toString());
+        assertEquals("Электронная почта не может быть пустой", violation.getMessage());
     }
 
     @Test
     void validate_WithEmailWithoutAt_ShouldHaveViolation() {
         validUser.setEmail("testexample.com");
-        assertFalse(validator.validate(validUser).isEmpty());
+
+        Set<ConstraintViolation<User>> violations = validator.validate(validUser);
+
+        assertEquals(1, violations.size());
+        ConstraintViolation<User> violation = violations.iterator().next();
+        assertEquals("email", violation.getPropertyPath().toString());
+        assertEquals("Электронная почта должна содержать символ @", violation.getMessage());
     }
 
     @Test
     void validate_WithEmptyLogin_ShouldHaveViolation() {
         validUser.setLogin("");
-        assertFalse(validator.validate(validUser).isEmpty());
+
+        Set<ConstraintViolation<User>> violations = validator.validate(validUser);
+
+        assertEquals(1, violations.size());
+        ConstraintViolation<User> violation = violations.iterator().next();
+        assertEquals("login", violation.getPropertyPath().toString());
+        assertEquals("Логин не может быть пустым", violation.getMessage());
     }
 
     @Test
     void validate_WithLoginContainingSpaces_ShouldHaveViolation() {
         validUser.setLogin("test user");
-        assertFalse(validator.validate(validUser).isEmpty());
+
+        Set<ConstraintViolation<User>> violations = validator.validate(validUser);
+
+        assertEquals(1, violations.size());
+        ConstraintViolation<User> violation = violations.iterator().next();
+        assertEquals("login", violation.getPropertyPath().toString());
+        assertEquals("Логин не может содержать пробелы", violation.getMessage());
+    }
+
+    @Test
+    void validate_WithNullBirthday_ShouldHaveViolation() {
+        validUser.setBirthday(null);
+
+        Set<ConstraintViolation<User>> violations = validator.validate(validUser);
+
+        assertEquals(1, violations.size());
+        ConstraintViolation<User> violation = violations.iterator().next();
+        assertEquals("birthday", violation.getPropertyPath().toString());
+        assertEquals("Дата рождения не может быть пустой", violation.getMessage());
     }
 
     @Test
     void validate_WithBirthdayInFuture_ShouldHaveViolation() {
         validUser.setBirthday(LocalDate.now().plusDays(1));
-        assertFalse(validator.validate(validUser).isEmpty());
+
+        Set<ConstraintViolation<User>> violations = validator.validate(validUser);
+
+        assertEquals(1, violations.size());
+        ConstraintViolation<User> violation = violations.iterator().next();
+        assertEquals("birthday", violation.getPropertyPath().toString());
+        assertEquals("Дата рождения не может быть в будущем", violation.getMessage());
     }
 
     @Test
     void validate_WithValidUser_ShouldHaveNoViolations() {
-        assertTrue(validator.validate(validUser).isEmpty());
+        Set<ConstraintViolation<User>> violations = validator.validate(validUser);
+
+        assertTrue(violations.isEmpty());
     }
 }
