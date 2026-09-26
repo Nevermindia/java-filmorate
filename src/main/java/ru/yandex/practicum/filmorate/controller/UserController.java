@@ -1,88 +1,63 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
-import lombok.extern.slf4j.Slf4j;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestBody;
-import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
 
-import java.util.ArrayList;
+import java.util.List;
 
-@Slf4j
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/users")
 public class UserController {
-    private final ArrayList<User> users = new ArrayList<>();
-    private Integer nextId = 1;
+    private final UserService service;
+
+    @GetMapping("/{id}")
+    public User getUserById(@PathVariable Long id) {
+        return service.getUserById(id);
+    }
+
+    @PutMapping("/{id}/friends/{friendId}")
+    public void addToFriends(@PathVariable Long id, @PathVariable Long friendId) {
+        service.addToFriend(id, friendId);
+    }
+
+    @DeleteMapping("/{id}/friends/{friendId}")
+    public void removeFromFriends(@PathVariable Long id, @PathVariable Long friendId) {
+        service.removeFromFriends(id, friendId);
+    }
+
+    @GetMapping("/{id}/friends")
+    public List<User> getFriends(@PathVariable Long id) {
+        return service.getFriends(id);
+    }
+
+    @GetMapping("/{id}/friends/common/{otherId}")
+    public List<User> getCommonFriends(@PathVariable Long id, @PathVariable Long otherId) {
+        return service.getFriendsInCommon(id, otherId);
+    }
 
     @PostMapping
     public User createUser(@Valid @RequestBody User user) {
-        log.debug("Received user data: {}", user);
-
-        resolveName(user);
-
-        user.setId(nextId++);
-        users.add(user);
-
-        log.info("User created successfully with id: {}", user.getId());
-        log.debug("Created user: {}", user);
-
-        return user;
+        return service.createUser(user);
     }
 
     @PutMapping
     public User updateUser(@Valid @RequestBody User user) {
-        log.debug("Received update request for user: {}", user);
-
-        Integer id = user.getId();
-        log.debug("Looking for user with id: {}", id);
-
-        User existingUser = users.stream()
-                .filter(u -> u.getId() == id)
-                .findFirst()
-                .orElseThrow(() -> {
-                    log.error("User not found with id: {}", id);
-                    return new NotFoundException("User not found with id: " + id);
-                });
-
-        log.debug("Found existing user: {}", existingUser);
-
-        resolveName(user);
-
-        log.debug("Updating email from '{}' to '{}'", existingUser.getEmail(), user.getEmail());
-        existingUser.setEmail(user.getEmail());
-
-        log.debug("Updating login from '{}' to '{}'", existingUser.getLogin(), user.getLogin());
-        existingUser.setLogin(user.getLogin());
-
-        log.debug("Updating name from '{}' to '{}'", existingUser.getName(), user.getName());
-        existingUser.setName(user.getName());
-
-        log.debug("Updating birthday from '{}' to '{}'", existingUser.getBirthday(), user.getBirthday());
-        existingUser.setBirthday(user.getBirthday());
-
-        log.info("User updated successfully with id: {}", existingUser.getId());
-        log.debug("Updated user: {}", existingUser);
-
-        return existingUser;
+        return service.updateUser(user);
     }
 
     @GetMapping
-    public ArrayList<User> getUsers() {
-        log.info("Returning all users, count: {}", users.size());
-        log.debug("Users list: {}", users);
-        return users;
-    }
-
-    private void resolveName(User user) {
-        if (user.getName() == null || user.getName().isBlank()) {
-            log.debug("Name is empty, using login as name: {}", user.getLogin());
-            user.setName(user.getLogin());
-        }
+    public List<User> getUsers() {
+        return service.getUsers();
     }
 }
