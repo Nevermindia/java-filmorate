@@ -4,6 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.controller.UserController;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
+import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
 import ru.yandex.practicum.filmorate.storage.userStorage.InMemoryUserStorage;
@@ -126,7 +127,7 @@ class UserControllerTest {
         updateData.setId(created.getId());
         updateData.setEmail("updated@example.com");
         updateData.setLogin("updateduser");
-        updateData.setName(null);  // ← ключевой случай
+        updateData.setName(null);
         updateData.setBirthday(LocalDate.of(1995, Month.JANUARY, 1));
 
         User updated = userController.updateUser(updateData);
@@ -172,9 +173,12 @@ class UserControllerTest {
 
         userController.addToFriends(firstUser.getId(), secondUser.getId());
 
-        List<User> friends = userController.getFriends(firstUser.getId());
-        assertEquals(1, friends.size());
-        assertEquals(secondUser.getId(), friends.getFirst().getId());
+        List<User> firstUserFriends = userController.getFriends(firstUser.getId());
+        List<User> secondUserFriends = userController.getFriends(secondUser.getId());
+        assertEquals(1, firstUserFriends.size());
+        assertEquals(1, secondUserFriends.size());
+        assertEquals(secondUser.getId(), firstUserFriends.getFirst().getId());
+        assertEquals(firstUser.getId(), secondUserFriends.getFirst().getId());
     }
 
     @Test
@@ -194,6 +198,15 @@ class UserControllerTest {
         userController.removeFromFriends(firstUser.getId(), secondUser.getId());
 
         assertTrue(userController.getFriends(firstUser.getId()).isEmpty());
+        assertTrue(userController.getFriends(secondUser.getId()).isEmpty());
+    }
+
+    @Test
+    void addToFriends_WithAddingSelf_ShouldThrowValidationException() {
+        User firstUser = userController.createUser(validUser);
+
+        assertThrows(ValidationException.class,
+                () -> userController.addToFriends(firstUser.getId(), firstUser.getId()));
     }
 
     @Test

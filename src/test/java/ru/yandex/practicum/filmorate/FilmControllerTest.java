@@ -169,6 +169,18 @@ class FilmControllerTest {
     }
 
     @Test
+    void addLikeTwice_ShouldAddUserIdToFilmLikesOnlyOnce() {
+        Film createdFilm = filmController.createFilm(validFilm);
+        User createdUser = userService.createUser(createUser("first"));
+
+        filmController.addLike(createdFilm.getId(), createdUser.getId());
+        filmController.addLike(createdFilm.getId(), createdUser.getId());
+
+        assertTrue(createdFilm.getLikes().contains(createdUser.getId()));
+        assertEquals(1, createdFilm.getLikes().size());
+    }
+
+    @Test
     void addLike_WithNonExistentUser_ShouldThrowNotFoundException() {
         Film createdFilm = filmController.createFilm(validFilm);
 

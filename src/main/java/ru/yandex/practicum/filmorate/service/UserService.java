@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
+import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.userStorage.UserStorage;
 
@@ -19,11 +20,13 @@ public class UserService {
     private final UserStorage storage;
 
     public User createUser(User user) {
+        resolveName(user);
         return storage.createUser(user);
     }
 
     public User updateUser(User user) {
         getUserById(user.getId());
+        resolveName(user);
         return storage.updateUser(user);
     }
 
@@ -42,6 +45,9 @@ public class UserService {
     public void addToFriend(Long id, Long friendId) {
         User user = getUserById(id);
         User friend = getUserById(friendId);
+        if (id.equals(friendId)) {
+            throw new ValidationException("Нельзя добавить в друзья самого себя");
+        }
         user.getFriends().add(friendId);
         friend.getFriends().add(id);
         log.info("User {} added to friends user {}", id, friendId);
@@ -68,5 +74,11 @@ public class UserService {
                 .filter(secondUserFriends::contains)
                 .collect(Collectors.toSet());
         return friendsInCommonIds.stream().map(this::getUserById).toList();
+    }
+
+    private void resolveName(User user) {
+        if (user.getName() == null || user.getName().isBlank()) {
+            user.setName(user.getLogin());
+        }
     }
 }
