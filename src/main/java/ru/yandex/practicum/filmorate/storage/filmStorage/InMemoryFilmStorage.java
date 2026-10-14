@@ -6,6 +6,7 @@ import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +40,8 @@ public class InMemoryFilmStorage implements FilmStorage {
         existingFilm.setDescription(film.getDescription());
         existingFilm.setReleaseDate(film.getReleaseDate());
         existingFilm.setDuration(film.getDuration());
+        existingFilm.setMpa(film.getMpa());
+        existingFilm.setGenres(film.getGenres());
 
         log.info("Film updated successfully with id: {}", existingFilm.getId());
 
@@ -55,5 +58,23 @@ public class InMemoryFilmStorage implements FilmStorage {
     @Override
     public Film getFilmById(Long id) {
         return films.get(id);
+    }
+
+    @Override
+    public void addLike(Long filmId, Long userId) {
+        getFilmById(filmId).getLikes().add(userId);
+    }
+
+    @Override
+    public void removeLike(Long filmId, Long userId) {
+        getFilmById(filmId).getLikes().remove(userId);
+    }
+
+    @Override
+    public List<Film> getMostPopularFilms(int count) {
+        return films.values().stream()
+                .sorted(Comparator.comparingInt((Film film) -> film.getLikes().size()).reversed())
+                .limit(count)
+                .toList();
     }
 }

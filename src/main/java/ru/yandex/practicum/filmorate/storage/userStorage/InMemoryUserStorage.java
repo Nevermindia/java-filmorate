@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -60,5 +62,36 @@ public class InMemoryUserStorage implements UserStorage {
     public User getUserById(Long id) {
         log.debug("Getting user with id: {}", id);
         return users.get(id);
+    }
+
+    @Override
+    public void addToFriend(Long id, Long friendId) {
+        User user = getUserById(id);
+        user.getFriends().add(friendId);
+        log.info("User {} added to friends user {}", id, friendId);
+    }
+
+    @Override
+    public List<User> getFriends(Long id) {
+        return getUserById(id).getFriends().stream()
+                .map(this::getUserById)
+                .toList();
+    }
+
+    @Override
+    public void removeFromFriends(Long id, Long friendId) {
+        getUserById(id).getFriends().remove(friendId);
+        log.info("User {} removed from friends user {}", id, friendId);
+    }
+
+    @Override
+    public List<User> getFriendsInCommon(Long id, Long otherId) {
+        log.debug("Getting friends in common for users with ids: {} and {}", id, otherId);
+        Set<Long> firstUserFriends = getUserById(id).getFriends();
+        Set<Long> secondUserFriends = getUserById(otherId).getFriends();
+        Set<Long> friendsInCommonIds = firstUserFriends.stream()
+                .filter(secondUserFriends::contains)
+                .collect(Collectors.toSet());
+        return friendsInCommonIds.stream().map(this::getUserById).toList();
     }
 }

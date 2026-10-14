@@ -176,9 +176,8 @@ class UserControllerTest {
         List<User> firstUserFriends = userController.getFriends(firstUser.getId());
         List<User> secondUserFriends = userController.getFriends(secondUser.getId());
         assertEquals(1, firstUserFriends.size());
-        assertEquals(1, secondUserFriends.size());
+        assertEquals(0, secondUserFriends.size());
         assertEquals(secondUser.getId(), firstUserFriends.getFirst().getId());
-        assertEquals(firstUser.getId(), secondUserFriends.getFirst().getId());
     }
 
     @Test
@@ -194,11 +193,13 @@ class UserControllerTest {
         User firstUser = userController.createUser(validUser);
         User secondUser = userController.createUser(createUser("second"));
         userController.addToFriends(firstUser.getId(), secondUser.getId());
+        userController.addToFriends(secondUser.getId(), firstUser.getId());
 
         userController.removeFromFriends(firstUser.getId(), secondUser.getId());
 
         assertTrue(userController.getFriends(firstUser.getId()).isEmpty());
-        assertTrue(userController.getFriends(secondUser.getId()).isEmpty());
+        assertEquals(1, secondUser.getFriends().size());
+        assertTrue(secondUser.getFriends().contains(firstUser.getId()));
     }
 
     @Test

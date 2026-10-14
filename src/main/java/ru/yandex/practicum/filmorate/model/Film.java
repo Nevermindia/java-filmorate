@@ -11,6 +11,7 @@ import lombok.ToString;
 
 import java.time.LocalDate;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
@@ -39,4 +40,8 @@ public class Film {
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     @ToString.Exclude
     private Set<Long> likes = new HashSet<>();
+
+    private Mpa mpa;
+
+    private Set<Genre> genres = new LinkedHashSet<>();
 }
