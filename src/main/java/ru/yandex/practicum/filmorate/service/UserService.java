@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate.service;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
@@ -9,15 +8,15 @@ import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.userStorage.UserStorage;
 
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
-@Slf4j
 @Service
-@RequiredArgsConstructor
 public class UserService {
 
     private final UserStorage storage;
+
+    public UserService(@Qualifier("userDbStorage") UserStorage storage) {
+        this.storage = storage;
+    }
 
     public User createUser(User user) {
         resolveName(user);
@@ -43,37 +42,30 @@ public class UserService {
     }
 
     public void addToFriend(Long id, Long friendId) {
-        User user = getUserById(id);
-        User friend = getUserById(friendId);
+        getUserById(id);
+        getUserById(friendId);
         if (id.equals(friendId)) {
             throw new ValidationException("Нельзя добавить в друзья самого себя");
         }
-        user.getFriends().add(friendId);
-        friend.getFriends().add(id);
-        log.info("User {} added to friends user {}", id, friendId);
+        storage.addToFriend(id, friendId);
     }
 
     public List<User> getFriends(Long id) {
-        return getUserById(id).getFriends().stream()
-                .map(this::getUserById)
-                .toList();
+        getUserById(id);
+        return storage.getFriends(id);
     }
 
     public void removeFromFriends(Long id, Long friendId) {
-        getUserById(id).getFriends().remove(friendId);
-        getUserById(friendId).getFriends().remove(id);
-        log.info("User {} removed from friends user {}", id, friendId);
+        getUserById(id);
+        getUserById(friendId);
+        storage.removeFromFriends(id, friendId);
 
     }
 
     public List<User> getFriendsInCommon(Long id, Long otherId) {
-        log.debug("Getting friends in common for users with ids: {} and {}", id, otherId);
-        Set<Long> firstUserFriends = getUserById(id).getFriends();
-        Set<Long> secondUserFriends = getUserById(otherId).getFriends();
-        Set<Long> friendsInCommonIds = firstUserFriends.stream()
-                .filter(secondUserFriends::contains)
-                .collect(Collectors.toSet());
-        return friendsInCommonIds.stream().map(this::getUserById).toList();
+        getUserById(id);
+        getUserById(otherId);
+        return storage.getFriendsInCommon(id, otherId);
     }
 
     private void resolveName(User user) {

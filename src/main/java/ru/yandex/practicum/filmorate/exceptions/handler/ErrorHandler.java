@@ -9,8 +9,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
-import ru.yandex.practicum.filmorate.controller.FilmController;
-import ru.yandex.practicum.filmorate.controller.UserController;
 import ru.yandex.practicum.filmorate.exceptions.ErrorResponse;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
@@ -20,7 +18,7 @@ import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Slf4j
-@RestControllerAdvice(assignableTypes = {FilmController.class, UserController.class})
+@RestControllerAdvice
 public class ErrorHandler {
 
     @ExceptionHandler
@@ -39,8 +37,10 @@ public class ErrorHandler {
     @ResponseStatus(BAD_REQUEST)
     public ErrorResponse handleBadRequest(final Exception e) {
         log.warn("Bad request: {}", e.getMessage());
-        return new ErrorResponse("Ошибка валидации",
-                "Некорректные данные запроса");
+        String description = e instanceof ValidationException
+                ? e.getMessage()
+                : "Некорректные данные запроса";
+        return new ErrorResponse("Ошибка валидации", description);
 
     }
 

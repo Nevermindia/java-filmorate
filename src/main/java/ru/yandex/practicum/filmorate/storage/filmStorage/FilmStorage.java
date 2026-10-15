@@ -12,4 +12,10 @@ public interface FilmStorage {
     List<Film> getFilms();
 
     Film getFilmById(Long id);
+
+    void addLike(Long filmId, Long userId);
+
+    void removeLike(Long filmId, Long userId);
+
+    List<Film> getMostPopularFilms(int count);
 }
