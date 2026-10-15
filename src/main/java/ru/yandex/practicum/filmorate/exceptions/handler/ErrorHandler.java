@@ -37,8 +37,10 @@ public class ErrorHandler {
     @ResponseStatus(BAD_REQUEST)
     public ErrorResponse handleBadRequest(final Exception e) {
         log.warn("Bad request: {}", e.getMessage());
-        return new ErrorResponse("Ошибка валидации",
-                "Некорректные данные запроса");
+        String description = e instanceof ValidationException
+                ? e.getMessage()
+                : "Некорректные данные запроса";
+        return new ErrorResponse("Ошибка валидации", description);
 
     }
 

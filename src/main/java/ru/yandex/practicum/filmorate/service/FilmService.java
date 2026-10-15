@@ -1,7 +1,7 @@
 package ru.yandex.practicum.filmorate.service;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
@@ -15,11 +15,15 @@ import static java.time.Month.DECEMBER;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class FilmService {
 
     private final FilmStorage storage;
     private final UserService userService;
+
+    public FilmService(@Qualifier("filmDbStorage") FilmStorage storage, UserService userService) {
+        this.storage = storage;
+        this.userService = userService;
+    }
 
     public Film createFilm(Film film) {
         validateReleaseDate(film);
